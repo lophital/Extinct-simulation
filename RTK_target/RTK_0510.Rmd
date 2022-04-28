@@ -1,0 +1,558 @@
+---
+title:  "<span style='font-size: 25px'>공동 조사 RTK측량 지점 대상</style>"
+subtitle: "<span style='font-size: 15px'>샘플수와 간격에 대한 건의</style>"
+author: "전청옥 서울대학교 지리학과"
+date: "`r Sys.Date()`"
+output:
+  rmdformats::downcute:
+    highlight: haddock
+    self_contained: yes
+    gallery: yes
+    number_sections: yes
+    pandoc_args: --number-offset=0
+    code_folding: show
+    toc_depth: 4
+    lightbox: yes
+editor_options: 
+  markdown: 
+    wrap: sentence
+---
+
+```{r setup, echo=FALSE, warning=FALSE, message=FALSE}
+require(knitr); require(rmdformats); require("DT")
+
+options(width="480"); options(max.print="75")
+options(digits=3); options(scipen=1000)
+options(DT.options = list(class="display compact nowrap hover",
+                          rownames=FALSE));
+options(encoding = 'EUC-KR')
+knitr::opts_chunk$set(
+   echo = TRUE, message = FALSE, warning = FALSE, cache = FALSE,
+   comment = "", collapse = FALSE, prompt = FALSE, tidy = FALSE,
+   fig.align="center", fig.retina=2.5,
+ aliases=c(h = 'fig.height', w = 'fig.width')
+)
+
+knitr::opts_knit$set(width=75)
+```
+
+
+본 문서는 5월 공동 현장 조사를 위한 계획을 위해 작성되었습니다.
+
+수문 모델링에 필요한 고도자료 샘플링 계획입니다.
+
+임의로 여러 계획을 제안드립니다. 구체적인 해상도나 고도자료 수집 위치에 대해서 의견 부탁드립니다.
+
+# 분석 준비
+
+```{r echo=FALSE}
+library(sf)
+library(tidyverse)
+library(tmap)
+```
+
+```{r echo=FALSE}
+getwd()
+```
+
+2021년 항공 사진을 살펴보고 봄 여름 시기에 식생으로 뒤덮히지 않았던 지역을 크게 3곳 선택하였습니다.
+
+```{r}
+st_read("research.gpkg") -> ra
+plot(ra)
+```
+
+
+도리섬 1곳과 경안천 일대의 2곳을 선정하였습니다.
+```{r}
+ra %>%
+dplyr::filter(loc == "DR1") -> DR1
+
+ra %>%
+dplyr::filter(loc == "GA1") -> GA1
+
+ra %>%
+dplyr::filter(loc == "GA2") -> GA2
+```
+
+좌측 상단 아주 작게 경안천 사이트 2곳, 우측 하단에 도리섬을 보여드립니다.
+이외에도 자갈 사주로 보이는 곳을 선정했지만 RTK 측정을 위해 임의로 2개만 설정해 본 문서에서 제시해드립니다.
+추가적인 지역은 문서 최하단에 모두 시각화 하였습니다.
+
+경안천 지역 2곳은 연구 지역내 자갈이나 모래가 있을 것으로 보이는 지점을 다음 스트리트뷰와 연동하여 찾아본 것입니다.
+21년 스트리트뷰로 살펴본 결과 인공위성 영상으론 모래인 지역들이 대부분 식생으로 가득찬 것을 볼 수 있었습니다.
+그나마 자갈밭이 나타나는 지점으로 경안천에서 2곳을 선정하였습니다.
+도리섬은 매년 경계가 자주 바뀌는 관계로 식생이 자리잡은 지점을 대상으로 샘플링 폴리곤을 지정했습니다.
+
+```{r}
+sf::st_sample(DR1, 100, type="regular", by_polygon = T) %>% st_set_crs(4326) -> sample_DR1
+sf::st_sample(GA1, 100, type="regular", by_polygon = T) %>% st_set_crs(4326) -> sample_GA1
+sf::st_sample(GA2, 100, type="regular", by_polygon = T) %>% st_set_crs(4326) -> sample_GA2
+sf::st_sample(DR1, 50, type="regular", by_polygon = T) %>% st_set_crs(4326) -> sample_DR1.50
+sf::st_sample(GA1, 50, type="regular", by_polygon = T) %>% st_set_crs(4326) -> sample_GA1.50
+sf::st_sample(GA2, 50, type="regular", by_polygon = T) %>% st_set_crs(4326) -> sample_GA2.50
+```
+
+주변 지형과 판별이 쉽도록 인터렉티브한 지도를 준비했습니다.
+
+```{r}
+tmap::tmap_mode("view")
+```
+
+
+
+# 샘플링 시각화
+## 도리섬(DR1)
+다음은 50개의 샘플을 도리섬에 표시한 지도입니다.
+
+```{r fig.cap="Fig.1 도리섬 50개 샘플링 지도"}
+tm_shape(DR1, unit = "m") +
+  tm_polygons(alpha = 0.2) +
+tm_shape(sample_DR1.50, unit = "m") +
+  tm_dots() +
+tm_basemap("Esri.WorldImagery") +
+tm_basemap("OpenStreetMap.Mapnik") +
+  tm_scale_bar()
+```
+
+샘플 간의 간격은 62.3M 입니다.
+```{r}
+st_distance(sample_DR1.50)[1,2]
+```
+
+
+
+다음은 약 98개의 샘플지점을 표시한 지도입니다.
+
+```{r fig.cap="Fig.2 도리섬 98개의 샘플링 지도"}
+tm_shape(DR1, unit = "m") +
+    tm_polygons(alpha = 0.2) +
+tm_shape(sample_DR1, unit = "m") +
+  tm_dots() +
+tm_basemap("Esri.WorldImagery") +
+  tm_basemap("OpenStreetMap.Mapnik") +
+  tm_scale_bar()
+```
+
+샘플 간의 간격은 44m입니다.
+```{r}
+st_distance(sample_DR1)[1,2]
+```
+
+
+
+```{r}
+sf::st_sample(DR1, 1000, type="regular", by_polygon = T) %>% st_set_crs(4326) -> sample_DR1.1000
+```
+
+
+다음은 13.9m 간격으로 1000여개의 RTK지점을 표시한것입니다.
+
+```{r fig.cap="Fig.3 도리섬 1000여개의 샘플링 지도"}
+tm_shape(DR1, unit = "m") +
+tm_basemap("Esri.WorldImagery") +
+  tm_basemap("OpenStreetMap.Mapnik") +
+    tm_polygons(alpha = 0.2) +
+tm_shape(sample_DR1.1000, unit = "m") +
+  tm_dots() +
+tm_scale_bar()
+```
+
+```{r}
+st_distance(sample_DR1.1000)[1,2]  
+```
+
+
+## 경안천 1 지점(GA1)
+
+
+다음은 경안천 1구역 지점에 대해서 연구 샘플 50개를 배치했을 때 지도입니다.
+샘플간 간격은 약 32.3m입니다.
+```{r fig.cap= "Fig.4 경안천 1 지점 50여개의 샘플링 지도"}
+tm_shape(GA1, unit = "m") +
+tm_basemap("Esri.WorldImagery") +
+  tm_basemap("OpenStreetMap.Mapnik") +
+    tm_polygons(alpha = 0.2) +
+tm_shape(sample_GA1.50, unit = "m") +
+  tm_dots() +
+tm_scale_bar()
+```
+
+```{r}
+st_distance(sample_GA1.50)[1,2]
+```
+
+
+다음은 경안천 1구역 샘플 100개의 지도입니다.
+샘플간 간격은 17.9m입니다.
+```{r fig.cap="Fig.5 경안천 1지점 100여개의 샘플링 지도"}
+tm_shape(GA1, unit = "m") +
+tm_basemap("Esri.WorldImagery") +
+  tm_basemap("OpenStreetMap.Mapnik") +
+    tm_polygons(alpha = 0.2) +
+tm_shape(sample_GA1, unit = "m") +
+  tm_dots() +
+tm_scale_bar()
+```
+
+```{r}
+st_distance(sample_GA1)[1,2]
+```
+
+
+## 경안천 2 지점(GA2)
+
+다음은 경안천 2구역 샘플 50개의 지도입니다.
+샘플간 간격 약 17.6미터 입니다.
+```{r fig.cap="Fig.6 경안천 2지점 50여개의 샘플링 지도"}
+tm_shape(GA2, unit = "m") +
+tm_basemap("Esri.WorldImagery") +
+  tm_basemap("OpenStreetMap.Mapnik") +
+    tm_polygons(alpha = 0.2) +
+tm_shape(sample_GA2.50, unit = "m") +
+  tm_dots()
+
+```
+
+```{r}
+st_distance(sample_GA2.50)[1,2]
+```
+
+다음은 경안천 2구역 샘플 100개의 지도입니다.
+샘플간 간격은 12.4m 입니다.
+```{r fig.cap="Fig.7 경안천 2지점 100여개의 샘플링 지도"}
+tm_shape(GA2, unit = "m") +
+tm_basemap("Esri.WorldImagery") +
+  tm_basemap("OpenStreetMap.Mapnik") +
+    tm_polygons(alpha = 0.2) +
+tm_shape(sample_GA2, unit = "m") +
+  tm_dots() +
+tm_scale_bar()
+```
+
+```{r}
+st_distance(sample_GA2)[1,2]
+```
+
+
+## 경안천 기타 지점(GA3~17)
+
+경안천 기타 지점들은 항공영상 상에서는 자갈사주와 유사해 보이나 
+면적이 작거나 스트리트뷰 상에서 초본으로 뒤덮여 보이는 지역들입니다.
+
+
+```{r}
+# 50pcs
+map(c(3:17), function(i){
+ra %>%
+dplyr::filter(loc == paste0("GA",i))}) %>%
+map(., function(GA){
+  tm_shape(GA, unit = "m") +
+tm_basemap("Esri.WorldImagery") +
+    tm_basemap("OpenStreetMap.Mapnik") +
+    tm_polygons(alpha = 0.2) +
+tm_shape(sf::st_sample(GA, 50, type="regular", by_polygon = T) %>% st_set_crs(4326) , unit = "m") +
+  tm_dots() +
+tm_scale_bar()}) -> tm_GAs.50
+
+map(c(3:17), function(i){
+ra %>%
+dplyr::filter(loc == paste0("GA",i))}) %>%
+map(function(GA){
+st_distance(sf::st_sample(GA, 50, type="regular", by_polygon = T) %>% st_set_crs(4326))[1,2]}) -> tm_GAs.D.50
+
+# 100pcs
+map(c(3:17), function(i){
+ra %>%
+dplyr::filter(loc == paste0("GA",i))}) %>%
+map(., function(GA){
+  tm_shape(GA, unit = "m") +
+tm_basemap("Esri.WorldImagery") +
+    tm_basemap("OpenStreetMap.Mapnik") +
+    tm_polygons(alpha = 0.2) +
+tm_shape(sf::st_sample(GA, 100, type="regular", by_polygon = T) %>% st_set_crs(4326) , unit = "m") +
+  tm_dots() +
+tm_scale_bar()}) -> tm_GAs.100
+
+map(c(3:17), function(i){
+ra %>%
+dplyr::filter(loc == paste0("GA",i))}) %>%
+map(function(GA){
+st_distance(sf::st_sample(GA, 100, type="regular", by_polygon = T) %>% st_set_crs(4326))[1,2]}) -> tm_GAs.D.100
+
+
+```
+
+GA3 지점-50개
+```{r}
+tm_GAs.50[[1]]
+```
+```{r}
+tm_GAs.D.50[[1]]
+```
+
+GA3 지점-100개
+```{r}
+tm_GAs.100[[1]]
+```
+```{r}
+tm_GAs.D.100[[1]]
+```
+
+
+
+
+
+GA4 지점-50개
+```{r}
+tm_GAs.50[[2]]
+```
+```{r}
+tm_GAs.D.50[[2]]
+```
+
+GA4 지점-100개
+```{r}
+tm_GAs.100[[2]]
+```
+```{r}
+tm_GAs.D.100[[2]]
+```
+
+
+
+GA5 지점-50개
+```{r}
+tm_GAs.50[[3]]
+```
+```{r}
+tm_GAs.D.50[[3]]
+```
+
+GA5 지점-100개
+```{r}
+tm_GAs.100[[3]]
+```
+```{r}
+tm_GAs.D.100[[3]]
+```
+
+
+GA6 지점-50개
+```{r}
+tm_GAs.50[[4]]
+```
+```{r}
+tm_GAs.D.50[[4]]
+```
+
+GA6 지점-100개
+```{r}
+tm_GAs.100[[4]]
+```
+```{r}
+tm_GAs.D.100[[4]]
+```
+
+
+
+
+GA7 지점-50개
+```{r}
+tm_GAs.50[[5]]
+```
+```{r}
+tm_GAs.D.50[[5]]
+```
+
+GA7 지점-100개
+```{r}
+tm_GAs.100[[5]]
+```
+```{r}
+tm_GAs.D.100[[5]]
+```
+
+
+
+GA8 지점 -50개
+```{r}
+tm_GAs.50[[6]]
+```
+```{r}
+tm_GAs.D.50[[6]]
+```
+
+GA8 지점 -100개
+```{r}
+tm_GAs.100[[6]]
+```
+```{r}
+tm_GAs.D.100[[6]]
+```
+
+
+
+GA9 지점-50개
+```{r}
+tm_GAs.50[[7]]
+```
+```{r}
+tm_GAs.D.50[[7]]
+```
+
+GA9 지점-100개
+```{r}
+tm_GAs.100[[7]]
+```
+```{r}
+tm_GAs.D.100[[7]]
+```
+
+
+
+GA10 지점-50개
+```{r}
+tm_GAs.50[[8]]
+```
+```{r}
+tm_GAs.D.50[[8]]
+```
+
+GA10 지점-100개
+```{r}
+tm_GAs.100[[8]]
+```
+```{r}
+tm_GAs.D.100[[8]]
+```
+
+
+
+
+GA11 지점-50개
+```{r}
+tm_GAs.50[[9]]
+```
+```{r}
+tm_GAs.D.50[[9]]
+```
+
+GA11 지점-100개
+```{r}
+tm_GAs.100[[9]]
+```
+```{r}
+tm_GAs.D.100[[9]]
+```
+
+
+
+
+GA12 지점-50개
+```{r}
+tm_GAs.50[[10]]
+```
+```{r}
+tm_GAs.D.50[[10]]
+```
+
+GA12 지점-100개
+```{r}
+tm_GAs.100[[10]]
+```
+```{r}
+tm_GAs.D.100[[10]]
+```
+
+
+
+GA13 지점-50개
+```{r}
+tm_GAs.50[[11]]
+```
+```{r}
+tm_GAs.D.50[[11]]
+```
+
+GA13 지점-100개
+```{r}
+tm_GAs.100[[11]]
+```
+```{r}
+tm_GAs.D.100[[11]]
+```
+
+
+
+GA14 지점-50개
+```{r}
+tm_GAs.50[[12]]
+```
+```{r}
+tm_GAs.D.50[[12]]
+```
+
+GA14 지점-100개
+```{r}
+tm_GAs.100[[12]]
+```
+```{r}
+tm_GAs.D.100[[12]]
+```
+
+
+
+
+GA15 지점-50개
+```{r}
+tm_GAs.50[[13]]
+```
+```{r}
+tm_GAs.D.50[[13]]
+```
+
+GA15 지점-100개
+```{r}
+tm_GAs.100[[13]]
+```
+```{r}
+tm_GAs.D.100[[13]]
+```
+
+
+
+
+GA16 지점-50개
+```{r}
+tm_GAs.50[[14]]
+```
+```{r}
+tm_GAs.D.50[[14]]
+```
+
+GA16 지점-100개
+```{r}
+tm_GAs.100[[14]]
+```
+```{r}
+tm_GAs.D.100[[14]]
+```
+
+
+
+GA17 지점-50개
+```{r}
+tm_GAs.50[[15]]
+```
+```{r}
+tm_GAs.D.50[[15]]
+```
+
+GA17 지점-100개
+```{r}
+tm_GAs.100[[15]]
+```
+```{r}
+tm_GAs.D.100[[15]]
+```
