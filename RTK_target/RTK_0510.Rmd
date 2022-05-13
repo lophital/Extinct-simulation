@@ -556,3 +556,70 @@ tm_GAs.100[[15]]
 ```{r}
 tm_GAs.D.100[[15]]
 ```
+
+
+
+# 현장답사 0514 샘플
+```{r}
+sample_DR1.50 %>% 
+  st_transform("EPSG:5186") %>% 
+  st_coordinates() %>% 
+  as.data.frame() %>% 
+  relocate('Y', 'X') %>%
+  write_csv("DR1.50.csv", col_names = FALSE)
+```
+
+```{r}
+sample_GA1.50 %>%
+  st_transform("EPSG:5186") %>% 
+  st_coordinates() %>% 
+  as.data.frame() %>% 
+  relocate('Y', 'X') %>%
+  write_csv("GA1.50.csv", col_names = FALSE)
+
+sample_GA2.50 %>%
+  st_transform("EPSG:5186") %>% 
+  st_coordinates() %>% 
+  as.data.frame() %>% 
+  relocate('Y', 'X') %>%
+  write_csv("GA2.50.csv", col_names = FALSE)
+
+
+
+map(c(3:17), function(i){
+ra %>%
+dplyr::filter(loc == paste0("GA",i))}) %>%
+map(., function(GA){
+  sf::st_sample(GA, 50, type="regular", by_polygon = T)
+}) -> sample_GAs.50
+
+for(i in 1:length(sample_GAs.50)){
+sample_GAs.50[[i]] %>%
+  st_set_crs("EPSG:4326") %>%
+  st_transform("EPSG:5186") %>% 
+  st_coordinates() %>% 
+  as.data.frame() %>% 
+  relocate('Y', 'X') %>%
+  write_csv(paste0("GA",i+2,".50.csv"), col_names = FALSE)}
+
+```
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
